@@ -1,0 +1,81 @@
+# CSC 419 Homework Assignment 0
+# Part 1 Example Code
+# Load required libraries - sklearn, numpy
+from sklearn.preprocessing import StandardScaler
+from sklearn.linear_model import Perceptron
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score
+import pandas as pd
+import numpy as np
+
+# Load the iris dataset (included in sklearn). More documentation on the dataset
+# can be found here: https://scikit-learn.org/stable/datasets/toy_dataset.html#iris-
+# dataset
+banknote_df = pd.read_csv("data_banknote_authentication.csv", header=None)
+
+# FIX: convert DataFrame to numpy array (this was missing)
+banknote_data_array = banknote_df.to_numpy()
+
+# Create our X and y data - X contains the measurements of flower dimensions
+#(data), y contains the type of flower (labels)
+X_banknote = banknote_data_array[:, 0:4]
+y_banknote = banknote_data_array[:, 4]
+
+# View the first five class labels of our data. The labels are a numeric value
+# representing the type of iris: 'setosa' (0), 'versicolor' (1), or 'virginica' (2).
+# The first five values are all 0, indiciate 'setosa'
+print(y_banknote[:5])
+
+# View the first five rows of measurements (X data). Each row represents a
+# different flower, and each column represents a measurement of a different component
+# of the flower. There are 4 features (columns) in the X data.
+print(X_banknote[:5])
+
+# Split the data into 70% training data and 30% test data. This means 70% of the
+# data will be used to train the perceptron model, and 30% will be held back to
+#validate (test) the model after training is complete.
+X_banknote_train, X_banknote_test, y_banknote_train, y_banknote_test = train_test_split(
+    X_banknote, y_banknote, test_size=0.3
+)
+
+# Train the scaler, which standarizes all the features to have mean=0 and unit
+# variance. (The math for a perceptron is "cleaner" if values are scaled in this
+# way.)
+sc_banknote = StandardScaler()
+sc_banknote.fit(X_banknote_train)
+
+# Apply the scaler to the X training data
+# FIX: this incorrectly referenced X_iris_train
+X_banknote_train_std = sc_banknote.transform(X_banknote_train)
+
+# Apply the SAME scaler to the X test data
+X_banknote_test_std = sc_banknote.transform(X_banknote_test)
+
+# The y data (labels) is categorical, so no scaling is applied
+# Create a perceptron object with the parameters: 40 iterations (epochs) over the
+# training data, and a learning rate of 0.1.
+# A random state for the training data is specified to ensure it is shuffled the
+# same way across multiple training runs - this creates results that are
+# reproduceable and can be used to compare training approaches.
+pptn_banknote = Perceptron(max_iter=40, eta0=0.1, random_state=0)
+
+# Train the perceptron
+# FIX: this incorrectly referenced X_iris_train_std and y_iris_train
+pptn_banknote.fit(X_banknote_train_std, y_banknote_train)
+
+# Run the test data through the perceptron and have it predict a y (class label)
+#value for each row.
+y_banknote_pred = pptn_banknote.predict(X_banknote_test_std)
+
+# View the predicted y test data (the class that our perceptron put each flower in
+# the testing data into)
+print(y_banknote_pred)
+
+# View the true y test data (the actual class label)
+print(y_banknote_test)
+
+# View the accuracy of the model, which is: 1 - (observations predicted wrong /
+# total observations) - should be around 80-90%, but since this is a small dataset,
+# there can be a lot of variance depending on exactly how the training and testing
+# data is randomized
+print('Accuracy: %.2f' % accuracy_score(y_banknote_test, y_banknote_pred))
